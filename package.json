@@ -1,0 +1,31 @@
+{
+  "name": "secondai-net",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The website of AI Second Opinion (secondai.net), generated from the kit's own documents at a release tag",
+  "author": "Igor Saevets",
+  "license": "MIT",
+  "homepage": "https://secondai.net",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/igorsaevets/secondai-net.git"
+  },
+  "engines": {
+    "node": ">=22.23.4"
+  },
+  "scripts": {
+    "sync": "node scripts/sync-kit-docs.mjs",
+    "dev": "astro dev",
+    "build": "astro build",
+    "check": "node scripts/check-dist.mjs",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "0.43.1",
+    "astro": "7.4.12",
+    "sharp": "0.35.5",
+    "starlight-llms-txt": "0.12.0"
+  }
+}

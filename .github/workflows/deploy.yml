@@ -1,0 +1,83 @@
+name: Deploy to GitHub Pages
+
+# The pages are generated from the documents of an ai-second-opinion release (scripts/sync-kit-docs.mjs).
+# A push here, a manual run (optionally naming a tag) or the daily run picks up the latest release.
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "ai-second-opinion tag to build from (empty = the latest release)"
+        required: false
+  schedule:
+    - cron: "17 6 * * *"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout the site
+        uses: actions/checkout@v7
+
+      - name: Pick the kit release
+        id: kit
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WANT: ${{ inputs.tag }}
+        run: |
+          tag="${WANT:-$(gh release view --repo igorsaevets/ai-second-opinion --json tagName --jq .tagName)}"
+          case "$tag" in v[0-9]*.[0-9]*.[0-9]*) ;; *) echo "not a release tag: '$tag'"; exit 1 ;; esac
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Building from ai-second-opinion $tag" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Checkout the kit at that tag
+        uses: actions/checkout@v7
+        with:
+          repository: igorsaevets/ai-second-opinion
+          ref: ${{ steps.kit.outputs.tag }}
+          path: kit
+          persist-credentials: false
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install
+        run: npm ci
+
+      - name: Generate the pages from the kit
+        run: npm run sync -- --kit kit --tag "${{ steps.kit.outputs.tag }}"
+
+      - name: Build
+        run: npm run build
+
+      - name: Check the built site
+        run: npm run check -- --kit kit
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5

@@ -1,0 +1,26 @@
+# build output and Astro's generated types
+dist/
+.astro/
+
+# dependencies
+node_modules/
+
+# Generated from the kit's release by scripts/sync-kit-docs.mjs - never edited here, never committed:
+# the kit's documents are the one home of every sentence on this site.
+src/content/docs/
+src/generated/
+public/kit.json
+
+# the kit checkout the deploy workflow puts beside the site
+kit/
+
+# logs
+npm-debug.log*
+
+# environment variables
+.env
+.env.production
+
+# OS files
+.DS_Store
+Thumbs.db
